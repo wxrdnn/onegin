@@ -1,14 +1,28 @@
-#include "h/main.h"
+#include "h/constants.h"
+#include "h/input.h"
+#include "h/output.h"
+#include "h/sort.h"
 #include "h/utils.h"
 #include <assert.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+const char *cInputFileName = "onegin";
 
 int main(int argc, char *argv[])
 {
-    FILE *inputFile = fopen("onegin", "r");
+    // FILE *inputFile = fopen(cInputFileName, "r");
+    int inputFileDescriptor = open(cInputFileName, O_RDONLY);
     FILE *outputFile = fopen("sorted_onegin", "w");
-    TextBuf textBuf = CreateTextBuf(cStartTextBufSize);
+
+    size_t fileSize = 0;
+    int error = GetFileSize(cInputFileName, &fileSize);
+    if (error)
+    {
+        return error;
+    }
+
+    char *textBuf = CreateTextBuf(fileSize);
 
     LoadText(inputFile, &textBuf);
     SortText(&textBuf, soDescending);
@@ -19,41 +33,6 @@ int main(int argc, char *argv[])
     fclose(inputFile);
     fclose(outputFile);
     return 0;
-}
-
-TextBuf *LoadText(FILE *inputFile, TextBuf *textBuf)
-{
-    char buf[cBufSize] = {};
-
-    while (ReadLine(buf, cBufSize, inputFile) != NULL)
-    {
-        buf[cBufSize - 1] = '\0';
-        if (textBuf->lineAmount == textBuf->bufSize - 1)
-        {
-            ExtendTextBuffer(textBuf);
-        }
-
-        size_t index = textBuf->lineAmount;
-        size_t lineLength = strlen(buf);
-
-        textBuf->lines[index].ptr = (char *)calloc(lineLength + 1, sizeof(char));
-        textBuf->lines[index].size = lineLength + 1;
-        strncpy(textBuf->lines[index].ptr, buf, lineLength);
-
-        // DumpString(buf);
-        ++textBuf->lineAmount;
-    }
-
-    return textBuf;
-}
-
-TextBuf CreateTextBuf(size_t startSize)
-{
-    TextBuf textBuf = {};
-    textBuf.lines = (LineBuf *)malloc(sizeof(LineBuf) * startSize);
-    textBuf.bufSize = startSize;
-    textBuf.lineAmount = 0;
-    return textBuf;
 }
 
 void DumpTextBuf(TextBuf *textBuf)
@@ -105,13 +84,6 @@ void PrintTextToFile(TextBuf *textBuf, FILE *outputFile)
         fprintf(outputFile, "%s", textBuf->lines[i].ptr);
     }
     return;
-}
-
-char *ReadLine(char *buf, size_t bufSize, FILE *inputFile)
-{
-    assert(buf);
-    memset(buf, 0, bufSize);
-    return fgets(buf, (int)(bufSize - 1), inputFile);
 }
 
 TextBuf *ExtendTextBuffer(TextBuf *textBuf)
