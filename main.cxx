@@ -1,42 +1,18 @@
+#include "h/main.h"
 #include "h/utils.h"
 #include <assert.h>
-#include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-const size_t cBufSize = 1024; // TODO handle buffers that dont have \n
-const size_t cMaxLine = 1024;
-const size_t cStartTextBufSize = 1024;
-
-struct LineBuf
-{
-    char *ptr;
-    size_t size;
-};
-
-struct TextBuf
-{
-    LineBuf *lines;
-    size_t bufSize;
-    size_t lineAmount;
-};
-
-TextBuf *LoadText(FILE *inputFile, TextBuf *textBuf);
-TextBuf CreateTextBuf(size_t startSize);
-void DumpTextBuf(TextBuf *textBuf);
-void FreeTextBuf(TextBuf *textBuf);
-void DumpString(char *s);
-void PrintTextToFile(TextBuf *textBuf, FILE *outputFile);
-char *ReadLine(char *buf, size_t bufSize, FILE *inputFile);
-TextBuf *ExtendTextBuffer(TextBuf *textBuf);
-
-int main()
+int main(int argc, char *argv[])
 {
     FILE *inputFile = fopen("onegin", "r");
     FILE *outputFile = fopen("sorted_onegin", "w");
     TextBuf textBuf = CreateTextBuf(cStartTextBufSize);
+
     LoadText(inputFile, &textBuf);
+    SortText(&textBuf, soDescending);
+
     PrintTextToFile(&textBuf, outputFile);
     FreeTextBuf(&textBuf);
 
@@ -144,4 +120,38 @@ TextBuf *ExtendTextBuffer(TextBuf *textBuf)
     textBuf->lines = (LineBuf *)realloc(textBuf->lines, newSize * sizeof(LineBuf));
     textBuf->bufSize = newSize;
     return textBuf;
+}
+
+void SortText(TextBuf *textBuf, SortingOptions sortingOption)
+{
+    int (*comp)(const void *, const void *);
+
+    switch (sortingOption)
+    {
+    default:
+    case soAscending:
+        comp = CompareLineBufsAscending;
+        break;
+
+    case soDescending:
+        comp = CompareLineBufsDescending;
+        break;
+    }
+
+    qsort(textBuf->lines, textBuf->lineAmount, sizeof(LineBuf), comp);
+    return;
+}
+
+int CompareLineBufsAscending(const void *p1, const void *p2)
+{
+    const LineBuf *lb1 = (const LineBuf *)p1;
+    const LineBuf *lb2 = (const LineBuf *)p2;
+    return strcmp(lb1->ptr, lb2->ptr);
+}
+
+int CompareLineBufsDescending(const void *p1, const void *p2)
+{
+    const LineBuf *lb1 = (const LineBuf *)p1;
+    const LineBuf *lb2 = (const LineBuf *)p2;
+    return -strcmp(lb1->ptr, lb2->ptr);
 }
