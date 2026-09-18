@@ -29,15 +29,25 @@ enum SortingOptions
 };
 
 TextBuf *LoadText(FILE *inputFile, TextBuf *textBuf);
+
 TextBuf CreateTextBuf(size_t startSize);
+
 void DumpTextBuf(TextBuf *textBuf);
+
 void FreeTextBuf(TextBuf *textBuf);
+
 void DumpString(char *s);
+
 void PrintTextToFile(TextBuf *textBuf, FILE *outputFile);
+
 char *ReadLine(char *buf, size_t bufSize, FILE *inputFile);
+
 TextBuf *ExtendTextBuffer(TextBuf *textBuf);
+
 void SortText(TextBuf *textBuf, SortingOptions sortingOption);
+
 int CompareLineBufsAscending(const void *p1, const void *p2);
+
 int CompareLineBufsDescending(const void *p1, const void *p2);
 
 #endif
