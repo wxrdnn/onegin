@@ -6,7 +6,7 @@
 #include <cstring>
 #include <stdio.h>
 
-const size_t cBufSize = 1024;
+const size_t cBufSize = 1024; // TODO handle buffers that dont have \n
 const size_t cMaxLine = 1024;
 const size_t cStartTextBufSize = 1024;
 
@@ -28,16 +28,19 @@ TextBuf CreateTextBuf(size_t startSize);
 void DumpTextBuf(TextBuf *textBuf);
 void FreeTextBuf(TextBuf *textBuf);
 void DumpString(char *s);
+void DumpTextToFile(TextBuf *textBuf, FILE *outputFile);
 
 int main()
 {
     FILE *inputFile = fopen("onegin", "r");
-    // FILE *outputFile = fopen("sorted_onegin", "w");
+    FILE *outputFile = fopen("sorted_onegin", "w");
     TextBuf textBuf = CreateTextBuf(cStartTextBufSize);
     LoadText(inputFile, &textBuf);
-    DumpTextBuf(&textBuf);
+    DumpTextToFile(&textBuf, outputFile);
     FreeTextBuf(&textBuf);
 
+    fclose(inputFile);
+    fclose(outputFile);
     return 0;
 }
 
@@ -57,6 +60,13 @@ TextBuf *LoadText(FILE *inputFile, TextBuf *textBuf)
         while ((newLinePos = strchr(ptrToRead, '\n')) != NULL)
         {
             assert(ptrToRead < (buf + sizeof(buf) / sizeof(buf[0])));
+
+            if (textBuf->lineAmount == textBuf->bufSize)
+            {
+                size_t newBufSize = textBuf->bufSize * 2;
+                textBuf->lines = (LineBuf *)realloc(textBuf->lines, newBufSize * (sizeof(LineBuf)));
+                textBuf->bufSize = newBufSize;
+            }
 
             size_t lineLength = (size_t)(newLinePos - ptrToRead + 1);
 
@@ -87,7 +97,7 @@ TextBuf *LoadText(FILE *inputFile, TextBuf *textBuf)
 TextBuf CreateTextBuf(size_t startSize)
 {
     TextBuf textBuf = {};
-    textBuf.lines = (LineBuf *)malloc(sizeof(LineBuf) * startSize); // TODO Add linebuf extending
+    textBuf.lines = (LineBuf *)malloc(sizeof(LineBuf) * startSize);
     textBuf.bufSize = startSize;
     textBuf.lineAmount = 0;
     return textBuf;
@@ -125,5 +135,15 @@ void DumpString(char *s)
         fprintf(stderr, "DEBUG: <\'%c\' = %d>\n", s[i], s[i]);
     }
     fprintf(stderr, "DEBUG: End string dump.\n");
+    return;
+}
+void DumpTextToFile(TextBuf *textBuf, FILE *outputFile)
+{
+    for (size_t i = 0; i < textBuf->lineAmount; ++i)
+    {
+        fprintf(stderr, "DEBUG: i: %lu, lineAmount: %lu.\n", i, textBuf->lineAmount);
+        assert(textBuf->lines[i].ptr != NULL);
+        fprintf(outputFile, "%s", textBuf->lines[i].ptr);
+    }
     return;
 }
