@@ -1,4 +1,6 @@
 #include "h/input.h"
+#include "h/errorHandle.h"
+#include "h/types.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdio>
@@ -10,49 +12,98 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-int GetFileSize(const char *const path, size_t *size)
+Error GetFileSize(const char *const path, size_t *size)
 {
     struct stat buf = {};
-    int error = stat(path, &buf);
+    int errnoCode = stat(path, &buf);
+    Error error = CreateError(TranslateErrnoCode(errnoCode), path);
     *size = (size_t)buf.st_size;
     return error;
 }
 
-int LoadText(const int fd, char *const textBuf, const size_t fileSize) // needs textBuf size of <fileSize + 1>
+Error LoadText(const int fd, char *const textBuf, const size_t fileSize) // needs textBuf size of <fileSize + 1>
 {
     long int numberRead = read(fd, textBuf, fileSize);
+    Error error = CreateError(ecSuccess, "");
     if (numberRead != (long int)fileSize)
     {
-        return -1;
+        error.exitCode = ecCantReadFile;
+        return error;
     }
 
     textBuf[fileSize] = '\0';
 
-    return 0;
+    return error;
 }
 
-char *CreateTextBuf(const size_t size)
+Error CreateTextBuf(const size_t size, char **textBuf)
 {
-    return (char *)calloc(size, sizeof(char));
+    assert(textBuf);
+    *textBuf = (char *)calloc(size, sizeof(char));
+    Error error = CreateError(ecSuccess, "");
+    if (!*textBuf)
+    {
+        error = CreateError(ecCantAllocateMemory, "text buffer");
+        return error;
+    }
+    return error;
 }
 
-IndexBuffer *CreateIndexBuffer(const size_t startSize)
+Error CreateIndexBuffer(const size_t startSize, IndexBuffer **indexBuffer)
 {
-    IndexBuffer *indexBuf = (IndexBuffer *)malloc(sizeof(IndexBuffer));
+    assert(indexBuffer);
+    Error error = CreateError(ecSuccess, "");
+    *indexBuffer = (IndexBuffer *)malloc(sizeof(IndexBuffer));
 
-    indexBuf->size = startSize;
-    indexBuf->lineCount = 0;
-    indexBuf->ptr = (char **)calloc(startSize, sizeof(char *));
+    if (!indexBuffer)
+    {
+        error = CreateError(ecCantAllocateMemory, "index buffer");
+        return error;
+    }
 
-    return indexBuf;
+    (*indexBuffer)->size = startSize;
+    (*indexBuffer)->lineCount = 0;
+    (*indexBuffer)->ptr = (char **)calloc(startSize, sizeof(char *));
+
+    if (!(*indexBuffer)->ptr)
+    {
+        error = CreateError(ecCantAllocateMemory, "index buffer lines");
+        return error;
+    }
+
+    return error;
 }
 
-IndexBuffer *ExtendIndexBuffer(IndexBuffer *indexBuffer)
+Error ExtendIndexBuffer(IndexBuffer **indexBuffer)
 {
-    size_t newSize = indexBuffer->size * 2;
-    indexBuffer->ptr = (char **)realloc(indexBuffer->ptr, newSize * sizeof(char *));
-    indexBuffer->size = newSize;
-    return indexBuffer;
+    assert(indexBuffer);
+    Error error = CreateError(ecSuccess, "");
+
+    size_t newSize = (*indexBuffer)->size * 2;
+    (*indexBuffer)->ptr = (char **)realloc((*indexBuffer)->ptr, newSize * sizeof(char *));
+
+    if (!*indexBuffer)
+    {
+        error = CreateError(ecCantAllocateMemory, "realloc of index buffer");
+        return error;
+    }
+
+    (*indexBuffer)->size = newSize;
+    return error;
+}
+
+void FreeIndexBuf(IndexBuffer *indexBuf)
+{
+    assert(indexBuf);
+    assert(indexBuf->ptr);
+    for (size_t i = 0; i < indexBuf->lineCount; ++i)
+    {
+        assert(indexBuf->ptr[i]);
+        free(indexBuf->ptr[i]);
+    }
+    free(indexBuf->ptr);
+    free(indexBuf);
+    return;
 }
 
 char *ReadLine(char *buf, size_t bufSize, FILE *inputFile)
@@ -82,20 +133,31 @@ void ParseTextBuffer(const char *const textBuf, IndexBuffer *indexBuf)
     CopyStringToBuffer(indexBuf, prevLinePos, prevLinePos + strlen(prevLinePos));
 }
 
-void CopyStringToBuffer(IndexBuffer *const indexBuf, const char *const start, const char *const end)
+Error CopyStringToBuffer(IndexBuffer *indexBuf, const char *const start, const char *const end)
 {
     assert(indexBuf);
     assert(start);
     assert(end);
 
+    Error error = CreateError(ecSuccess, "");
+
     size_t lineLength = (unsigned)(end - start) + 1;
 
     if (indexBuf->lineCount == indexBuf->size)
     {
-        ExtendIndexBuffer(indexBuf);
+        error = ExtendIndexBuffer(&indexBuf);
+        if (error.exitCode != ecSuccess)
+        {
+            return error;
+        }
     }
 
     indexBuf->ptr[indexBuf->lineCount] = (char *)calloc(lineLength + 1, sizeof(char));
+    if (!indexBuf->ptr)
+    {
+        error = CreateError(ecCantAllocateMemory, "index buffer lines");
+        return error;
+    }
 
     // fprintf(stderr, "DEBUG: lineCount: %lu, nextLinePos: %ld\n", indexBuf->lineCount, nextLinePos - textBuf);
     assert(indexBuf->ptr[indexBuf->lineCount]);
@@ -104,4 +166,6 @@ void CopyStringToBuffer(IndexBuffer *const indexBuf, const char *const start, co
     indexBuf->ptr[indexBuf->lineCount][lineLength - 1] = '\0';
 
     indexBuf->lineCount++;
+
+    return error;
 }

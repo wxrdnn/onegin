@@ -1,20 +1,19 @@
 #include "h/sort.h"
 #include <cctype>
 #include <cstdlib>
-#include <cstring>
 
-void SortText(IndexBuffer *indexBuffer, SortingOptions sortingOption)
+void SortText(IndexBuffer *indexBuffer, SortingModes sortingMode)
 {
     int (*comp)(const void *, const void *);
 
-    switch (sortingOption)
+    switch (sortingMode)
     {
     default:
-    case soAscending:
+    case smAscending:
         comp = CompareLinesAscending;
         break;
 
-    case soDescending:
+    case smDescending:
         comp = CompareLinesDescending;
         break;
     }

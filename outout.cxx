@@ -1,5 +1,7 @@
+#include "h/errorHandle.h"
 #include "h/output.h"
 #include <cassert>
+#include <cerrno>
 #include <cstring>
 
 void DumpIndexBuf(IndexBuffer *indexBuf)
@@ -24,15 +26,22 @@ void DumpString(char *s)
     fprintf(stderr, "DEBUG: End string dump.\n");
     return;
 }
-void PrintTextToFile(IndexBuffer *indexBuf, FILE *outputFile)
+
+Error PrintTextToFile(IndexBuffer *indexBuf, FILE *outputFile)
 {
+    Error error = CreateError(ecSuccess, "");
+
     for (size_t i = 0; i < indexBuf->lineCount; ++i)
     {
         // fprintf(stderr, "DEBUG: i: %lu, lineAmount: %lu.\n", i, textBuf->lineAmount);
         assert(indexBuf);
         assert(indexBuf->ptr);
         // DumpString(textBuf->lines[i].ptr);
-        fprintf(outputFile, "%s", indexBuf->ptr[i]);
+        if (fprintf(outputFile, "%s", indexBuf->ptr[i]) < 0)
+        {
+            error = CreateError(TranslateErrnoCode(errno), "");
+            return error;
+        }
     }
-    return;
+    return error;
 }

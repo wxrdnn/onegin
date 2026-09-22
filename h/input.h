@@ -2,29 +2,26 @@
 
 #define INPUT_H
 
+#include "errorHandle.h"
+#include "sort.h"
 #include <cstdio>
 
-struct IndexBuffer
-{
-    char **ptr;
-    size_t size;
-    size_t lineCount;
-};
+Error GetFileSize(const char *const path, size_t *size);
 
-int LoadText(const int fd, char *const textBuf, const size_t fileSize);
+Error LoadText(const int fd, char *const textBuf, const size_t fileSize); // needs textBuf size of <fileSize + 1>
 
-char *CreateTextBuf(const size_t size);
+Error CreateTextBuf(const size_t size, char **textBuf);
 
-IndexBuffer *CreateIndexBuffer(const size_t startSize);
+Error CreateIndexBuffer(const size_t startSize, IndexBuffer **indexBuffer);
 
-IndexBuffer *ExtendIndexBuffer(IndexBuffer *indexBuffer);
+Error ExtendIndexBuffer(IndexBuffer **indexBuffer);
+
+void FreeIndexBuf(IndexBuffer *indexBuf);
 
 char *ReadLine(char *buf, size_t bufSize, FILE *inputFile);
 
-int GetFileSize(const char *const path, size_t *size);
-
 void ParseTextBuffer(const char *const textBuf, IndexBuffer *indexBuf);
 
-void CopyStringToBuffer(IndexBuffer *const indexBuf, const char *const start, const char *const end);
+Error CopyStringToBuffer(IndexBuffer *indexBuf, const char *const start, const char *const end);
 
 #endif
