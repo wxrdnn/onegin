@@ -2,16 +2,20 @@
 
 #define SORT_H
 
+#include "input.h"
+
 enum SortingOptions
 {
     soAscending,
     soDescending
 };
 
-void SortText(TextBuf *textBuf, SortingOptions sortingOption);
+int CompareLinesAscending(const void *p1, const void *p2);
 
-int CompareLineBufsAscending(const void *p1, const void *p2);
+int CompareLinesDescending(const void *p1, const void *p2);
 
-int CompareLineBufsDescending(const void *p1, const void *p2);
+void SortText(IndexBuffer *indexBuffer, SortingOptions sortingOption);
+
+int CompareSrings(const char *const s1, const char *const s2);
 
 #endif

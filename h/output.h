@@ -2,13 +2,15 @@
 
 #define OUTPUT_H
 
+#include "input.h"
 #include <cstdio>
-void DumpTextBuf(TextBuf *textBuf);
 
-void FreeTextBuf(TextBuf *textBuf);
+void DumpIndexBuf(IndexBuffer *indexBuf);
+
+void FreeIndexBuf(IndexBuffer *indexBuf);
 
 void DumpString(char *s);
 
-void PrintTextToFile(TextBuf *textBuf, FILE *outputFile);
+void PrintTextToFile(IndexBuffer *indexBuf, FILE *outputFile);
 
 #endif
