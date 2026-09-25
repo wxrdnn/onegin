@@ -1,8 +1,10 @@
 #include "h/sort.h"
+#include "h/types.h"
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
 
-void SortText(IndexBuffer *indexBuffer, SortingModes sortingMode)
+void SortText(IndexBuffer *indexBuffer, SortingModes sortingMode, CompareStringsModes compareMode)
 {
     int (*comp)(const void *, const void *);
 
@@ -10,11 +12,29 @@ void SortText(IndexBuffer *indexBuffer, SortingModes sortingMode)
     {
     default:
     case smAscending:
-        comp = CompareLinesAscending;
+        switch (compareMode)
+        {
+        default:
+        case csmFromStart:
+            comp = CompareLinesAscendingFromStart;
+            break;
+        case csmFromEnd:
+            comp = CompareLinesAscendingFromEnd;
+            break;
+        }
         break;
 
     case smDescending:
-        comp = CompareLinesDescending;
+        switch (compareMode)
+        {
+        default:
+        case csmFromStart:
+            comp = CompareLinesDescendingFromStart;
+            break;
+        case csmFromEnd:
+            comp = CompareLinesDescendingFromEnd;
+            break;
+        }
         break;
     }
 
@@ -22,31 +42,36 @@ void SortText(IndexBuffer *indexBuffer, SortingModes sortingMode)
     return;
 }
 
-int CompareLinesAscending(const void *p1, const void *p2)
+int CompareLinesAscendingFromStart(const void *p1, const void *p2)
 {
     const char *const *s1 = (const char *const *)p1;
     const char *const *s2 = (const char *const *)p2;
-    return CompareSrings(*s1, *s2);
+    return CompareSringsFromStart(*s1, *s2);
 }
 
-int CompareLinesDescending(const void *p1, const void *p2)
+int CompareLinesDescendingFromStart(const void *p1, const void *p2)
 {
     const char *const *s1 = (const char *const *)p1;
     const char *const *s2 = (const char *const *)p2;
-    return -CompareSrings(*s1, *s2);
+    return -CompareSringsFromStart(*s1, *s2);
 }
 
-int CompareSrings(const char *const s1, const char *const s2)
+int CompareLinesAscendingFromEnd(const void *p1, const void *p2)
 {
-    // size_t len1 = strlen(s1);
-    // size_t len2 = strlen(s2);
+    const char *const *s1 = (const char *const *)p1;
+    const char *const *s2 = (const char *const *)p2;
+    return CompareSringsFromEnd(*s1, *s2);
+}
 
-    // if (len1 != len2)
-    // {
-    //     return len1 - len2;
-    // }
-    // else
-    // {
+int CompareLinesDescendingFromEnd(const void *p1, const void *p2)
+{
+    const char *const *s1 = (const char *const *)p1;
+    const char *const *s2 = (const char *const *)p2;
+    return -CompareSringsFromEnd(*s1, *s2);
+}
+
+int CompareSringsFromStart(const char *const s1, const char *const s2)
+{
     const char *p1 = s1;
     const char *p2 = s2;
 
@@ -70,13 +95,53 @@ int CompareSrings(const char *const s1, const char *const s2)
         ++p1;
         ++p2;
     }
-    // }
 
     if (*p1 != '\0')
     {
         return 1;
     }
     else if (*p2 != '\0')
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+int CompareSringsFromEnd(const char *const s1, const char *const s2)
+{
+    const char s1FirstChar = *s1;
+    const char s2FirstChar = *s2;
+
+    const char *p1 = s1 + strlen(s1);
+    const char *p2 = s2 + strlen(s2);
+
+    while (*p1 != s1FirstChar && *p2 != s2FirstChar)
+    {
+        if (isspace(*p1))
+        {
+            --p1;
+            continue;
+        }
+        if (isspace(*p2))
+        {
+            --p2;
+            continue;
+        }
+
+        if (*p1 != *p2)
+        {
+            return *p1 - *p2;
+        }
+        --p1;
+        --p2;
+    }
+
+    if (*p1 != s1FirstChar)
+    {
+        return 1;
+    }
+    else if (*p2 != s2FirstChar)
     {
         return -1;
     }

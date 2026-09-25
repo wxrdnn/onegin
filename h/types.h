@@ -17,6 +17,12 @@ enum SortingModes
     smDescending
 };
 
+enum CompareStringsModes
+{
+    csmFromStart,
+    csmFromEnd
+};
+
 struct LaunchOptions
 {
     const char *inputFileName;

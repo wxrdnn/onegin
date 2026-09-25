@@ -4,12 +4,18 @@
 
 #include "types.h"
 
-int CompareLinesAscending(const void *p1, const void *p2);
+void SortText(IndexBuffer *indexBuffer, SortingModes sortingMode, CompareStringsModes compareMode);
 
-int CompareLinesDescending(const void *p1, const void *p2);
+int CompareLinesAscendingFromStart(const void *p1, const void *p2);
 
-void SortText(IndexBuffer *indexBuffer, SortingModes sortingMode);
+int CompareLinesDescendingFromStart(const void *p1, const void *p2);
 
-int CompareSrings(const char *const s1, const char *const s2);
+int CompareLinesAscendingFromEnd(const void *p1, const void *p2);
+
+int CompareLinesDescendingFromEnd(const void *p1, const void *p2);
+
+int CompareSringsFromStart(const char *const s1, const char *const s2);
+
+int CompareSringsFromEnd(const char *const s1, const char *const s2);
 
 #endif

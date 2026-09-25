@@ -16,6 +16,8 @@
 
 int main(int argc, char *argv[])
 {
+    // TODO Sort by line ends
+
     Error error = CreateError(ecSuccess, "");
 
     LaunchOptions launchOptions = {};
@@ -47,14 +49,14 @@ int main(int argc, char *argv[])
         return HandleError(error).exitCode;
     }
 
-    char *textBuf = NULL;
-    error = CreateTextBuf(fileSize + 1, &textBuf);
+    char *rawTextBuf = NULL;
+    error = CreateTextBuf(fileSize + 1, &rawTextBuf);
     if (error.exitCode != ecSuccess)
     {
         return HandleError(error).exitCode;
     }
 
-    error = LoadText(inputFileDescriptor, textBuf, fileSize);
+    error = LoadText(inputFileDescriptor, rawTextBuf, fileSize);
     if (error.exitCode != ecSuccess)
     {
         return HandleError(error).exitCode;
@@ -70,9 +72,9 @@ int main(int argc, char *argv[])
     assert(indexBuffer);
     assert(indexBuffer->ptr);
 
-    ParseTextBuffer(textBuf, indexBuffer);
+    ParseTextBuffer(rawTextBuf, indexBuffer);
     // printf("%d", CompareSrings("        const char *const s1", " const char *const s"));
-    SortText(indexBuffer, launchOptions.sortingMode);
+    SortText(indexBuffer, launchOptions.sortingMode, csmFromEnd); // TODO csm option choose
 
     error = PrintTextToFile(indexBuffer, outputFile);
     if (error.exitCode != ecSuccess)
@@ -81,7 +83,7 @@ int main(int argc, char *argv[])
     }
 
     FreeIndexBuf(indexBuffer);
-    free(textBuf);
+    free(rawTextBuf);
 
     close(inputFileDescriptor);
     fclose(outputFile);
