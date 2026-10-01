@@ -34,14 +34,22 @@ long CountLinesOfFile(FILE *const fp)
     return count;
 }
 
-void ReplaceNewLineCharWithNullTerminator(char *const s)
+bool ReplaceNewLineCharWithNullTerminator(char *const s)
 {
     assert(s != NULL);
     char *p = strchr(s, '\n');
     if (p)
     {
         *p = '\0';
+        return true;
     }
+    return false;
+}
+
+void ReplaceAllNewLineCharWithNullTerminator(char *s)
+{
+    while (ReplaceNewLineCharWithNullTerminator(s))
+        s += strlen(s) + 1;
     return;
 }
 

@@ -1,6 +1,9 @@
 #include "h/input.h"
 #include "h/errorHandle.h"
+#include "h/output.h"
+#include "h/string.h"
 #include "h/types.h"
+#include "h/utils.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdio>
@@ -32,6 +35,7 @@ Error LoadText(const int fd, char *const textBuf, const size_t fileSize) // need
     }
 
     textBuf[fileSize] = '\0';
+    ReplaceAllNewLineCharWithNullTerminator(textBuf);
 
     return error;
 }
@@ -63,7 +67,7 @@ Error CreateIndexBuffer(const size_t startSize, IndexBuffer **indexBuffer)
 
     (*indexBuffer)->size = startSize;
     (*indexBuffer)->lineCount = 0;
-    (*indexBuffer)->ptr = (char **)calloc(startSize, sizeof(char *));
+    (*indexBuffer)->ptr = (String_t **)calloc(startSize, sizeof(*(*indexBuffer)->ptr));
 
     if (!(*indexBuffer)->ptr)
     {
@@ -80,7 +84,7 @@ Error ExtendIndexBuffer(IndexBuffer **indexBuffer)
     Error error = CreateError(ecSuccess, "");
 
     size_t newSize = (*indexBuffer)->size * 2;
-    (*indexBuffer)->ptr = (char **)realloc((*indexBuffer)->ptr, newSize * sizeof(char *));
+    (*indexBuffer)->ptr = (String_t **)realloc((*indexBuffer)->ptr, newSize * sizeof(*(*indexBuffer)->ptr));
 
     if (!*indexBuffer)
     {
@@ -96,6 +100,7 @@ void FreeIndexBuf(IndexBuffer *indexBuf)
 {
     assert(indexBuf);
     assert(indexBuf->ptr);
+
     for (size_t i = 0; i < indexBuf->lineCount; ++i)
     {
         assert(indexBuf->ptr[i]);
@@ -113,7 +118,7 @@ char *ReadLine(char *buf, size_t bufSize, FILE *inputFile)
     return fgets(buf, (int)(bufSize - 1), inputFile);
 }
 
-void ParseTextBuffer(const char *const textBuf, IndexBuffer *indexBuf)
+void ParseTextBuffer(const char *const textBuf, size_t const textBufSize, IndexBuffer *indexBuf)
 {
     assert(textBuf);
     assert(indexBuf);
@@ -122,26 +127,35 @@ void ParseTextBuffer(const char *const textBuf, IndexBuffer *indexBuf)
     const char *prevLinePos = textBuf;
     const char *nextLinePos = textBuf;
 
-    while ((nextLinePos = strchr(prevLinePos, '\n')) != NULL)
+    while ((nextLinePos - textBuf) < textBufSize)
     {
-        CopyStringToBuffer(indexBuf, prevLinePos, nextLinePos);
+        nextLinePos = prevLinePos + strlen(prevLinePos);
+        // fprintf(stderr,
+        //         "DEBUG: lineCount: %lu, (nextLinePos - textBuf) = %ld, textBufSize = %lu.\n",
+        //         indexBuf->lineCount,
+        //         nextLinePos - textBuf,
+        //         textBufSize);
+
+        WriteStringToBuffer(indexBuf, prevLinePos, nextLinePos);
 
         prevLinePos = nextLinePos + 1;
         // fprintf(stderr, "DEBUG: string after prevLinePos: <%s>", prevLinePos);
     }
 
-    CopyStringToBuffer(indexBuf, prevLinePos, prevLinePos + strlen(prevLinePos));
+    // WriteStringToBuffer(indexBuf, prevLinePos, prevLinePos + strlen(prevLinePos));
 }
 
-Error CopyStringToBuffer(IndexBuffer *indexBuf, const char *const start, const char *const end)
+Error WriteStringToBuffer(IndexBuffer *indexBuf, const char *const start, const char *const end)
 {
     assert(indexBuf);
     assert(start);
     assert(end);
 
+    // DUMP_STRING_RAW(start);
+
     Error error = CreateError(ecSuccess, "");
 
-    size_t lineLength = (unsigned)(end - start) + 1;
+    size_t lineLength = (unsigned)(end - start);
 
     if (indexBuf->lineCount == indexBuf->size)
     {
@@ -152,7 +166,7 @@ Error CopyStringToBuffer(IndexBuffer *indexBuf, const char *const start, const c
         }
     }
 
-    indexBuf->ptr[indexBuf->lineCount] = (char *)calloc(lineLength + 1, sizeof(char));
+    indexBuf->ptr[indexBuf->lineCount] = CreateString(0, 0);
     if (!indexBuf->ptr)
     {
         error = CreateError(ecCantAllocateMemory, "index buffer lines");
@@ -162,8 +176,8 @@ Error CopyStringToBuffer(IndexBuffer *indexBuf, const char *const start, const c
     // fprintf(stderr, "DEBUG: lineCount: %lu, nextLinePos: %ld\n", indexBuf->lineCount, nextLinePos - textBuf);
     assert(indexBuf->ptr[indexBuf->lineCount]);
 
-    memcpy(indexBuf->ptr[indexBuf->lineCount], start, lineLength * sizeof(char));
-    indexBuf->ptr[indexBuf->lineCount][lineLength - 1] = '\0';
+    indexBuf->ptr[indexBuf->lineCount]->data = start;
+    indexBuf->ptr[indexBuf->lineCount]->length = lineLength;
 
     indexBuf->lineCount++;
 

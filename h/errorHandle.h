@@ -64,4 +64,16 @@ Error CreateError(const ExitCode exitCode, const char *const context);
 //----------------------------------------------------------
 ExitCode TranslateErrnoCode(const int errnoCode);
 
+bool IsSuccess(const Error *const error);
+
+bool IsFail(const Error *const error);
+
+#define RETURN_EXITCODE_IF_FAIL(__error)                                                                               \
+    {                                                                                                                  \
+        if (IsFail(&(__error)))                                                                                        \
+        {                                                                                                              \
+            return (__error).exitCode;                                                                                 \
+        }                                                                                                              \
+    }
+
 #endif

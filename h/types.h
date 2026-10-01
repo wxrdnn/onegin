@@ -4,9 +4,15 @@
 
 #include <cstddef>
 
+struct String_t
+{
+    const char *data;
+    size_t length;
+};
+
 struct IndexBuffer
 {
-    char **ptr;
+    String_t **ptr;
     size_t size;
     size_t lineCount;
 };

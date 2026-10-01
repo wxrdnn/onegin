@@ -154,3 +154,13 @@ ExitCode TranslateErrnoCode(const int errnoCode)
         return ecUnexpectedFailure;
     }
 }
+
+bool IsSuccess(const Error *const error)
+{
+    return error->exitCode == ecSuccess;
+}
+
+bool IsFail(const Error *const error)
+{
+    return error->exitCode != ecSuccess;
+}

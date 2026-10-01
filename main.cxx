@@ -16,7 +16,7 @@
 
 int main(int argc, char *argv[])
 {
-    // TODO Sort by line ends
+    // TODO String_t struct stores char *s and size_t len
 
     Error error = CreateError(ecSuccess, "");
 
@@ -44,43 +44,30 @@ int main(int argc, char *argv[])
 
     size_t fileSize = 0;
     error = GetFileSize(launchOptions.inputFileName, &fileSize);
-    if (error.exitCode != ecSuccess)
-    {
-        return HandleError(error).exitCode;
-    }
+    RETURN_EXITCODE_IF_FAIL(error);
 
     char *rawTextBuf = NULL;
     error = CreateTextBuf(fileSize + 1, &rawTextBuf);
-    if (error.exitCode != ecSuccess)
-    {
-        return HandleError(error).exitCode;
-    }
+    RETURN_EXITCODE_IF_FAIL(error);
 
     error = LoadText(inputFileDescriptor, rawTextBuf, fileSize);
-    if (error.exitCode != ecSuccess)
-    {
-        return HandleError(error).exitCode;
-    }
+    RETURN_EXITCODE_IF_FAIL(error);
 
     IndexBuffer *indexBuffer = NULL;
     error = CreateIndexBuffer(cStartIndexBufSize, &indexBuffer);
-    if (error.exitCode != ecSuccess)
-    {
-        return HandleError(error).exitCode;
-    }
+    RETURN_EXITCODE_IF_FAIL(error);
 
     assert(indexBuffer);
     assert(indexBuffer->ptr);
 
-    ParseTextBuffer(rawTextBuf, indexBuffer);
-    // printf("%d", CompareSrings("        const char *const s1", " const char *const s"));
-    SortText(indexBuffer, launchOptions.sortingMode, csmFromEnd); // TODO csm option choose
+    ParseTextBuffer(rawTextBuf, fileSize, indexBuffer);
+    // fprintf(stderr, "DEBUG: in main.cxx:64: indexBuf->lineCount = %lu\n", indexBuffer->lineCount);
+
+    SortText(indexBuffer, launchOptions.sortingMode, csmFromStart); // TODO csm option choose
+    // fprintf(stderr, "DEBUG: in main.cxx:66: indexBuf->lineCount = %lu\n", indexBuffer->lineCount);
 
     error = PrintTextToFile(indexBuffer, outputFile);
-    if (error.exitCode != ecSuccess)
-    {
-        return HandleError(error).exitCode;
-    }
+    RETURN_EXITCODE_IF_FAIL(error);
 
     FreeIndexBuf(indexBuffer);
     free(rawTextBuf);

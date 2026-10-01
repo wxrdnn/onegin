@@ -44,30 +44,30 @@ void SortText(IndexBuffer *indexBuffer, SortingModes sortingMode, CompareStrings
 
 int CompareLinesAscendingFromStart(const void *p1, const void *p2)
 {
-    const char *const *s1 = (const char *const *)p1;
-    const char *const *s2 = (const char *const *)p2;
-    return CompareSringsFromStart(*s1, *s2);
+    const String_t *const *str1 = (const String_t *const *)p1;
+    const String_t *const *str2 = (const String_t *const *)p2;
+    return CompareSringsFromStart((*str1)->data, (*str2)->data);
 }
 
 int CompareLinesDescendingFromStart(const void *p1, const void *p2)
 {
-    const char *const *s1 = (const char *const *)p1;
-    const char *const *s2 = (const char *const *)p2;
-    return -CompareSringsFromStart(*s1, *s2);
+    const String_t *const *str1 = (const String_t *const *)p1;
+    const String_t *const *str2 = (const String_t *const *)p2;
+    return -CompareSringsFromStart((*str1)->data, (*str2)->data);
 }
 
 int CompareLinesAscendingFromEnd(const void *p1, const void *p2)
 {
-    const char *const *s1 = (const char *const *)p1;
-    const char *const *s2 = (const char *const *)p2;
-    return CompareSringsFromEnd(*s1, *s2);
+    const String_t *const *str1 = (const String_t *const *)p1;
+    const String_t *const *str2 = (const String_t *const *)p2;
+    return CompareSringsFromEnd((*str1)->data, (*str2)->data);
 }
 
 int CompareLinesDescendingFromEnd(const void *p1, const void *p2)
 {
-    const char *const *s1 = (const char *const *)p1;
-    const char *const *s2 = (const char *const *)p2;
-    return -CompareSringsFromEnd(*s1, *s2);
+    const String_t *const *str1 = (const String_t *const *)p1;
+    const String_t *const *str2 = (const String_t *const *)p2;
+    return -CompareSringsFromEnd((*str1)->data, (*str2)->data);
 }
 
 int CompareSringsFromStart(const char *const s1, const char *const s2)

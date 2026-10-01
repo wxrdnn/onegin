@@ -8,7 +8,13 @@
 
 void DumpIndexBuf(IndexBuffer *indexBuf);
 
-void DumpString(char *s);
+void DumpStringExpanded(String_t *str, const char *name);
+
+void DumpStringExpanded(const char *str, const char *name);
+
+void DumpStringRaw(const char *str, const char *name);
+
+#define DUMP_STRING_RAW(__str) DumpStringRaw((__str), #__str);
 
 Error PrintTextToFile(IndexBuffer *indexBuf, FILE *outputFile);
 
