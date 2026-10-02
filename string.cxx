@@ -17,7 +17,7 @@ void DestroyString(String_t *const str)
     assert(str);
     assert(str->data);
 
-    free((char *)str->data);
+    // free((char *)str->data);
     free(str);
     return;
 }

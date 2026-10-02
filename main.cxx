@@ -16,8 +16,6 @@
 
 int main(int argc, char *argv[])
 {
-    // TODO String_t struct stores char *s and size_t len
-
     Error error = CreateError(ecSuccess, "");
 
     LaunchOptions launchOptions = {};
